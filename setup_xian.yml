@@ -130,6 +130,35 @@
           WantedBy=multi-user.target
       notify: Reload systemd
 
+          - name: Install UFW
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow CometBFT REST API port
+      ufw:
+        rule: allow
+        port: 26657
+        proto: tcp
+
+    - name: Allow CometBFT Node Communication port
+      ufw:
+        rule: allow
+        port: 26656
+        proto: tcp
+
+    - name: Allow CometBFT Prometheus Metrics port
+      ufw:
+        rule: allow
+        port: 26660
+        proto: tcp
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: allow
+        direction: incoming
+
     - name: Enable and start CometBFT
       systemd:
         name: cometbft
