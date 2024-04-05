@@ -1,0 +1,154 @@
+---
+- name: Setup Xian ABCI application on Ubuntu 22.04
+  hosts: your_server_group_or_hostname
+  become: yes
+  vars:
+    python_version: "3.11"
+    xian_repo: "https://github.com/xian-network/xian-core.git"
+    contracting_repo: "https://github.com/xian-network/contracting.git"
+    cometbft_version: "0.38.6"
+    cometbft_url: "https://github.com/cometbft/cometbft/releases/download/v{{ cometbft_version }}/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
+    validator_privkey: "cd6cc45ffe7cebf09c6c6025575d50bb42c6c70c07e1dbc5150aaadc98705c2b" # Example key, replace with actual key
+    moniker: "MyNode" # Change name of every node
+    genesis_file_name: "genesis_testnet.json"
+    # Add the seed node IP if joining an existing network
+    seed_node: "91.108.112.184"  # Example: "91.108.112.184"
+    # Decide if you're starting a new network or joining an existing one
+    starting_new_network: false  # Set to false if joining an existing network
+
+  tasks:
+    - name: Update and add required PPA
+      apt:
+        name: software-properties-common
+        state: present
+      notify: Add deadsnakes PPA
+
+    - name: Install necessary packages
+      apt:
+        name:
+          - "pkg-config"
+          - "python{{ python_version }}"
+          - "python{{ python_version }}-dev"
+          - "python{{ python_version }}-venv"
+          - "libhdf5-dev"
+          - "build-essential"
+        update_cache: yes
+
+    - name: Clone Xian and contracting repositories
+      git:
+        repo: "{{ item.repo }}"
+        dest: "{{ item.dest }}"
+        clone: yes
+        update: yes
+      loop:
+        - { repo: "{{ xian_repo }}", dest: "/opt/xian-core" }
+        - { repo: "{{ contracting_repo }}", dest: "/opt/xian-core/contracting" }
+
+    - name: Set up Python virtual environment and dependencies
+      block:
+        - name: Create Python virtual environment
+          ansible.builtin.command:
+            cmd: "python{{ python_version }} -m venv /opt/xian-core/xian_venv"
+          args:
+            creates: "/opt/xian-core/xian_venv"
+
+        - name: Install Python packages
+          pip:
+            requirements: "/opt/xian-core/{{ item }}/requirements.txt"
+            virtualenv: "/opt/xian-core/xian_venv"
+          loop:
+            - contracting
+            - .
+
+    - name: Download and setup CometBFT
+      block:
+        - name: Download CometBFT
+          get_url:
+            url: "{{ cometbft_url }}"
+            dest: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
+
+        - name: Extract CometBFT
+          ansible.builtin.unarchive:
+            src: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
+            dest: "/opt/xian-core/"
+            remote_src: yes
+            creates: "/opt/xian-core/cometbft"
+
+        - name: Initialize CometBFT
+          ansible.builtin.command:
+            cmd: "./cometbft init"
+            chdir: "/opt/xian-core/"
+
+
+    - name: Configure your node
+      ansible.builtin.command:
+        chdir: /opt/xian-core/
+        cmd: >
+          {{ '/opt/xian-core/xian_venv/bin/python src/xian/tools/configure.py' }}
+          --moniker "{{ moniker }}"
+          --copy-genesis {{ starting_new_network | ternary('True', 'False') }}
+          --genesis-file-name {{ genesis_file_name }}
+          {{ '--seed-node ' + seed_node if seed_node else '' }}
+          --validator-privkey "{{ validator_privkey }}"
+      when: starting_new_network or seed_node
+
+    - name: Create CometBFT systemd service file
+      become: yes
+      copy:
+        dest: "/etc/systemd/system/cometbft.service"
+        content: |
+          [Unit]
+          Description=CometBFT Service
+          After=network.target
+
+          [Service]
+          User=root
+          WorkingDirectory=/opt/xian-core/
+          ExecStart=/opt/xian-core/cometbft node --rpc.laddr tcp://0.0.0.0:26657
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: Reload systemd
+
+    - name: Create Xian ABCI systemd service file
+      become: yes
+      copy:
+        dest: "/etc/systemd/system/xian.service"
+        content: |
+          [Unit]
+          Description=Xian ABCI Application
+          After=network.target
+
+          [Service]
+          User=root
+          WorkingDirectory=/opt/xian-core/
+          ExecStart=/bin/bash -c 'source /opt/xian-core/xian_venv/bin/activate && python src/xian/xian_abci.py'
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: Reload systemd
+
+    - name: Enable and start CometBFT
+      systemd:
+        name: cometbft
+        enabled: yes
+        state: started
+
+    - name: Enable and start Xian
+      systemd:
+        name: xian
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: Add deadsnakes PPA
+      apt_repository:
+        repo: "ppa:deadsnakes/ppa"
+        state: present
+      update_cache: yes
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
