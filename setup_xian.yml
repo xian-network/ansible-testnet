@@ -130,7 +130,7 @@
           WantedBy=multi-user.target
       notify: Reload systemd
 
-          - name: Install UFW
+    - name: Install UFW
       apt:
         name: ufw
         state: present
