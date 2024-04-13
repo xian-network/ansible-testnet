@@ -1,6 +1,6 @@
 ---
 - name: Setup Xian ABCI application on Ubuntu 22.04
-  hosts: your_server_group_or_hostname
+  hosts: nodes
   become: yes
   vars:
     python_version: "3.11"
@@ -9,12 +9,12 @@
     cometbft_version: "0.38.6"
     cometbft_url: "https://github.com/cometbft/cometbft/releases/download/v{{ cometbft_version }}/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
     validator_privkey: "cd6cc45ffe7cebf09c6c6025575d50bb42c6c70c07e1dbc5150aaadc98705c2b" # Example key, replace with actual key
-    moniker: "MyNode" # Change name of every node
+    moniker: "{{inventory_hostname}}" # Change name of every node
     genesis_file_name: "genesis_testnet.json"
     # Add the seed node IP if joining an existing network
-    seed_node: "91.108.112.184"  # Example: "91.108.112.184"
+    seed_node: "testnet1.xian.org"
     # Decide if you're starting a new network or joining an existing one
-    starting_new_network: false  # Set to false if joining an existing network
+    starting_new_network: true  # Set to false if joining an existing network
 
   tasks:
     - name: Update and add required PPA
@@ -40,6 +40,7 @@
         dest: "{{ item.dest }}"
         clone: yes
         update: yes
+        force: yes
       loop:
         - { repo: "{{ xian_repo }}", dest: "/opt/xian-core" }
         - { repo: "{{ contracting_repo }}", dest: "/opt/xian-core/contracting" }
@@ -52,13 +53,17 @@
           args:
             creates: "/opt/xian-core/xian_venv"
 
-        - name: Install Python packages
-          pip:
-            requirements: "/opt/xian-core/{{ item }}/requirements.txt"
-            virtualenv: "/opt/xian-core/xian_venv"
-          loop:
-            - contracting
-            - .
+    - name: Install Python packages for 'contracting'
+      ansible.builtin.command:
+        cmd: "/opt/xian-core/xian_venv/bin/pip install -e /opt/xian-core/contracting"
+      args:
+        chdir: "/opt/xian-core/contracting"
+
+    - name: Install Python packages for 'xian-core'
+      ansible.builtin.command:
+        cmd: "/opt/xian-core/xian_venv/bin/pip install -e /opt/xian-core/"
+      args:
+        chdir: "/opt/xian-core/"
 
     - name: Download and setup CometBFT
       block:
@@ -176,7 +181,7 @@
       apt_repository:
         repo: "ppa:deadsnakes/ppa"
         state: present
-      update_cache: yes
+        update_cache: yes
 
     - name: Reload systemd
       systemd:
