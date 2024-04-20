@@ -15,10 +15,15 @@ sudo apt-get install -y sshpass
 
 ## Playbooks
 
-### Setup Nodes
-- Sets up the xian-core node software on each node listed in `inventory.ini`
-- When asked for the vault pass, enter the password contained in Notion @ https://www.notion.so/Testnet-Ansible-Inventory-a09a2356f6b542e4b8bc7a45c3151741?pvs=4
+### Setup & Configure nodes
+*Installs all dependencies, updates repositories and configures nodes*
 - `ansible-playbook setup_xian.yml -i inventory.ini
+
+### Restart Validator Processes
+- `ansible-playbook nodes_restart.yml -i inventory.ini
+
+### Wipe all Validators + Restart
+- `ansible-playbook nodes_restart.yml -i inventory.ini
 
 
 ## Use-cases
