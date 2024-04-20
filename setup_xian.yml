@@ -12,7 +12,7 @@
     moniker: "{{inventory_hostname}}"
     genesis_file_name: "genesis-testnet.json"
     # Add the seed node IP if joining an existing network
-    seed_node_address: "{{false if inventory_hostname == 'testnet_1' else '614EBE42CBE8354F733851F4316D0DE316B1AEF0@testnet1.xian.org'}}"
+    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '18de8a0bd605310cda04b21951d8f3b3188397eb@116.203.81.165'}}"
     # Decide if you're starting a new network or joining an existing one
     starting_new_network: "{{ true if inventory_hostname == 'testnet_1' else false }}"  # Set to false if joining an existing network
 
@@ -56,13 +56,13 @@
 
     - name: Install Python packages for 'contracting'
       ansible.builtin.command:
-        cmd: "/root/xian-core/xian_venv/bin/pip install -e /root/xian-core/contracting"
+        cmd: "/root/xian-core/xian_venv/bin/pip install -e ."
       args:
         chdir: "/root/xian-core/contracting"
 
     - name: Install Python packages for 'xian-core'
       ansible.builtin.command:
-        cmd: "/root/xian-core/xian_venv/bin/pip install -e /root/xian-core/"
+        cmd: "/root/xian-core/xian_venv/bin/pip install -e ."
       args:
         chdir: "/root/xian-core/"
 
@@ -85,7 +85,6 @@
             cmd: "./cometbft init"
             chdir: "/root/xian-core/"
 
-
     - name: Configure your node
       ansible.builtin.command:
         chdir: /root/xian-core/
@@ -94,8 +93,8 @@
           --moniker "{{ moniker }}"
           --copy-genesis {{ starting_new_network | ternary('True', 'False') }}
           --genesis-file-name {{ genesis_file_name }}
-          --validator-privkey {{sk}}
-          --seed-node-address {{seed_node_address}}
+          --validator-privkey "{{sk}}"
+          --seed-node-address "{{seed_node_address}}"
       when: starting_new_network or seed_node_address
 
     - name: Install Node.js
@@ -112,44 +111,6 @@
     - name: Install PM2 globally using npm
       ansible.builtin.command:
         cmd: npm install pm2@latest -g
-
-    # - name: Create CometBFT systemd service file
-    #   become: yes
-    #   copy:
-    #     dest: "/etc/systemd/system/cometbft.service"
-    #     content: |
-    #       [Unit]
-    #       Description=CometBFT Service
-    #       After=network.target
-
-    #       [Service]
-    #       User=root
-    #       WorkingDirectory=/root/xian-core/
-    #       ExecStart=/root/xian-core/cometbft node --rpc.laddr tcp://0.0.0.0:26657
-    #       Restart=always
-
-    #       [Install]
-    #       WantedBy=multi-user.target
-    #   notify: Reload systemd
-
-    # - name: Create Xian ABCI systemd service file
-    #   become: yes
-    #   copy:
-    #     dest: "/etc/systemd/system/xian.service"
-    #     content: |
-    #       [Unit]
-    #       Description=Xian ABCI Application
-    #       After=network.target
-
-    #       [Service]
-    #       User=root
-    #       WorkingDirectory=/root/xian-core/
-    #       ExecStart=/bin/bash -c 'source /root/xian-core/xian_venv/bin/activate && python src/xian/xian_abci.py'
-    #       Restart=always
-
-    #       [Install]
-    #       WantedBy=multi-user.target
-    #   notify: Reload systemd
 
     - name: Install UFW
       apt:
