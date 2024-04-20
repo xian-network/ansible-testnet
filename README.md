@@ -24,25 +24,3 @@ sudo apt-get install -y sshpass
 
 ### Wipe all Validators + Restart
 - `ansible-playbook nodes_restart.yml -i inventory.ini
-
-
-## Use-cases
-
-- [x] Setup & Configure Nodes
-- [ ] Nodes up
-- [ ] Nodes down
-
-## TO-DO
-
-- [x] Dynamic passing of private key to playbooks
-- [x] Transition Playbooks to use Makefile & PM2 instead of systemCTL
-- [x] Assess Current State of the setup_xian playbook
-- [x] config.toml
-  - [x] Setup Seeds
-- [x] Create Validator codes correctly
-- [x] Confirm the branch is being built correctly
-- [x] Verify Makefile commands still work
-  - [x] up
-  - [x] down
-  - [x] wipe
-- [x] Submit transaction to node => success ?
