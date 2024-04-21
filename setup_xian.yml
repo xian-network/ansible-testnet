@@ -1,6 +1,6 @@
 ---
 - name: Setup Xian ABCI application on Ubuntu 22.04
-  hosts: nodes
+  hosts: validators:service_nodes
   become: yes
   vars:
     python_version: "3.11"

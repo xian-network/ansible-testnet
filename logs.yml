@@ -1,0 +1,21 @@
+---
+- name: Fetch and save PM2 logs from remote nodes
+  hosts: validators:service_nodes  # Adjust your target hosts
+  gather_facts: no
+
+  vars:
+
+
+  tasks:
+    - name: Execute PM2 logs command
+      command: pm2 logs --lines 100  # Adjust the command as needed
+      register: pm2_logs_output
+      ignore_errors: yes
+
+    - name: Save PM2 logs to local file
+      delegate_to: localhost
+      run_once: true
+      copy:
+        content: "{{ pm2_logs_output.stdout }}"
+        dest: "./pm2_logs_from_{{ inventory_hostname }}.txt"
+      when: pm2_logs_output.stdout is defined
