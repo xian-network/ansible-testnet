@@ -1,6 +1,6 @@
 ---
 - name: Setup project with venv and Makefile
-  hosts: nodes
+  hosts: validators:service_nodes
   become: yes
 
   tasks:
