@@ -1,0 +1,23 @@
+---
+- name: Fetch PM2 logs from remote nodes
+  hosts: validators:service_nodes  # Adjust your target hosts
+  gather_facts: no
+  vars:
+    local_log_dir: "./collected_pm2_logs/{{ inventory_hostname }}"  # Local directory to store logs
+    remote_log_dir: "~/.pm2/logs/"  # Remote directory where PM2 logs are stored
+
+  tasks:
+    - name: Ensure local log directory exists
+      delegate_to: localhost
+      run_once: true
+      file:
+        path: "{{ local_log_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Fetch PM2 logs from remote nodes
+      fetch:
+        src: "{{ remote_log_dir }}*"
+        dest: "{{ local_log_dir }}/"
+        flat: no
+        fail_on_missing: no

@@ -1,5 +1,5 @@
 ---
-- name: Setup Xian ABCI application on Ubuntu 22.04
+- name: Install and setup environment dependencies for Xian on Ubuntu 22.04
   hosts: validators:service_nodes
   become: yes
   vars:
@@ -8,13 +8,6 @@
     contracting_repo: "https://github.com/xian-network/contracting.git"
     cometbft_version: "0.38.6"
     cometbft_url: "https://github.com/cometbft/cometbft/releases/download/v{{ cometbft_version }}/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
-    validator_privkey: "{{sk}}"
-    moniker: "{{inventory_hostname}}"
-    genesis_file_name: "genesis-testnet.json"
-    # Add the seed node IP if joining an existing network
-    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '18de8a0bd605310cda04b21951d8f3b3188397eb@116.203.81.165'}}"
-    # Decide if you're starting a new network or joining an existing one
-    starting_new_network: "{{ true if inventory_hostname == 'testnet_1' else false }}"  # Set to false if joining an existing network
 
   tasks:
     - name: Update and add required PPA
@@ -34,38 +27,6 @@
           - "build-essential"
         update_cache: yes
 
-    - name: Clone Xian and contracting repositories
-      git:
-        repo: "{{ item.repo }}"
-        dest: "{{ item.dest }}"
-        version: "{{ item.version | default('HEAD') }}"
-        clone: yes
-        update: yes
-        force: yes
-      loop:
-        - { repo: "{{ xian_repo }}", dest: "/root/xian-core", version: "testnet-ansible-genesis" }
-        - { repo: "{{ contracting_repo }}", dest: "/root/xian-core/contracting" }
-
-    - name: Set up Python virtual environment and dependencies
-      block:
-        - name: Create Python virtual environment
-          ansible.builtin.command:
-            cmd: "python{{ python_version }} -m venv /root/xian-core/xian_venv"
-          args:
-            creates: "/root/xian-core/xian_venv"
-
-    - name: Install Python packages for 'contracting'
-      ansible.builtin.command:
-        cmd: "/root/xian-core/xian_venv/bin/pip install -e ."
-      args:
-        chdir: "/root/xian-core/contracting"
-
-    - name: Install Python packages for 'xian-core'
-      ansible.builtin.command:
-        cmd: "/root/xian-core/xian_venv/bin/pip install -e ."
-      args:
-        chdir: "/root/xian-core/"
-
     - name: Download and setup CometBFT
       block:
         - name: Download CometBFT
@@ -84,18 +45,6 @@
           ansible.builtin.command:
             cmd: "./cometbft init"
             chdir: "/root/xian-core/"
-
-    - name: Configure your node
-      ansible.builtin.command:
-        chdir: /root/xian-core/
-        cmd: >
-          {{ 'xian_venv/bin/python src/xian/tools/configure.py' }}
-          --moniker "{{ moniker }}"
-          --copy-genesis {{ starting_new_network | ternary('True', 'False') }}
-          --genesis-file-name {{ genesis_file_name }}
-          --validator-privkey "{{sk}}"
-          --seed-node-address "{{seed_node_address}}"
-      when: starting_new_network or seed_node_address
 
     - name: Install Node.js
       apt:

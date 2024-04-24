@@ -3,9 +3,6 @@
   hosts: validators:service_nodes  # Adjust your target hosts
   gather_facts: no
 
-  vars:
-
-
   tasks:
     - name: Execute PM2 logs command
       command: pm2 logs --lines 100  # Adjust the command as needed

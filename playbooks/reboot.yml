@@ -1,6 +1,6 @@
 ---
 - name: Restart all machines
-  hosts: nodes
+  hosts: validators:service_nodes
   become: yes
   tasks:
     - name: Reboot the machines
