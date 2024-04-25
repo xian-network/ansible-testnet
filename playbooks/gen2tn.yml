@@ -1,0 +1,61 @@
+---
+- name: Update genesis file and push changes
+  hosts: service_nodes:validators
+  become: yes
+  vars:
+    output_directory: "/root/xian-core/"
+    genesis_file: "/root/xian-core/src/xian/tools/genesis/genesis-testnet.json"
+    venv_path: "/root/xian-core/xian_venv/bin/activate"
+    branch: 'testnet'
+
+  tasks:
+    - name: Activate virtual environment and run export_state.py
+      ansible.builtin.shell: |
+        source {{ venv_path }}
+        python src/xian/tools/export_state.py -k {{ sk }} --output-path {{ output_directory }}
+      args:
+        chdir: /root/xian-core/
+        executable: /bin/bash
+
+    - name: Read output file
+      ansible.builtin.slurp:
+        src: "{{ output_directory }}/genesis_block.json"
+      register: output_content
+
+    - name: Decode output content
+      ansible.builtin.set_fact:
+        decoded_output: "{{ (output_content['content'] | b64decode) | from_json }}"
+
+    - name: Write JSON data to a temporary file
+      ansible.builtin.copy:
+        dest: "/tmp/decoded_output.json"
+        content: "{{ decoded_output | to_nice_json }}"
+        mode: '0600'
+
+    - name: Execute Python script using the temporary file
+      ansible.builtin.shell: |
+        source {{ venv_path }}
+        python src/xian/tools/update_abci_json.py "{{ genesis_file }}" "{{ output_directory }}/genesis_block.json"
+      args:
+        chdir: /root/xian-core/
+        executable: /bin/bash
+
+    - name: Remove temporary JSON file
+      ansible.builtin.file:
+        path: "{{ output_directory }}/genesis_block.json"
+        state: absent
+
+    - name: Add the updated genesis block to staging
+      ansible.builtin.shell:
+        cmd: git add src/xian/tools/genesis/genesis-testnet.json
+        chdir: /root/xian-core/
+
+    - name: Commit the updated genesis block
+      ansible.builtin.shell:
+        cmd: git commit -m "Update genesis block"
+        chdir: /root/xian-core/
+
+    - name: Push changes
+      ansible.builtin.shell:
+        cmd: git push origin "{{ branch }}"
+        chdir: /root/xian-core/

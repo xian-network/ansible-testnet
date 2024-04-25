@@ -32,6 +32,7 @@ sudo apt-get install -y sshpass
   - `make configure`
 - configure a specific group of machines :
   - `make configure TARGET=<hostname or group>`
+
 ### Restart Nodes Processes
 - all :
   - `make rs`
@@ -45,3 +46,9 @@ sudo apt-get install -y sshpass
 - some :
   - `make rs TARGET==<hostname or group>`
   
+### Export ABCI state + Push to git
+*Creates a JSON with the state of the ABCI application, adds it to `genesis_testnet.json`, stages the change and pushes it to the testnet branch*
+*Host machine must be signed into github, otherwise the push step will fail*
+- Most likely to be called on a remote dev machine which has git access
+- Add your remote machine to inventory.ini
+  - `make gen2tn TARGET=<your_node_hostname>`

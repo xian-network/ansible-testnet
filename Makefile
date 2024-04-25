@@ -1,5 +1,6 @@
 TARGET ?= all
 LOGS_LINES ?= 100
+EXPORT_STATE_TARGET ?= some_node_with_git_access
 
 # To perform an action on a specific node, use the TARGET variable from the cli
 # eg: `make setup TARGET=validators` or `make rs TARGET=service_nodes`
@@ -30,3 +31,5 @@ make dwu:
 make logs:
 	ansible-playbook ./playbooks/logs.yml -i inventory.ini -l $(TARGET) -e "lines=$(LOGS_LINES)"
 	
+make gen2tn:
+	ansible-playbook ./playbooks/gen2tn.yml -i inventory.ini -l $(TARGET)
