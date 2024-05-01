@@ -1,10 +1,13 @@
 TARGET ?= all
 LOGS_LINES ?= 100
-EXPORT_STATE_TARGET ?= some_node_with_git_access
+EXPORT_STATE_HOST ?= dev_node
 
 # To perform an action on a specific node, use the TARGET variable from the cli
 # eg: `make setup TARGET=validators` or `make rs TARGET=service_nodes`
 
+# Pulls the latest changes for contracting / xian
+# Installs both packages
+# Populates the validator private key based on sk passed from ansible
 configure:
 	ansible-playbook ./playbooks/configure.yml -i inventory.ini -l $(TARGET)
 
@@ -32,4 +35,4 @@ make logs:
 	ansible-playbook ./playbooks/logs.yml -i inventory.ini -l $(TARGET) -e "lines=$(LOGS_LINES)"
 	
 make gen2tn:
-	ansible-playbook ./playbooks/gen2tn.yml -i inventory.ini -l $(TARGET)
+	ansible-playbook ./playbooks/gen2tn.yml -i inventory.ini -l $(EXPORT_STATE_HOST)
