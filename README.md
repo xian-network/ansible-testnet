@@ -50,12 +50,12 @@ sudo apt-get install -y sshpass
 - some :
   - `make rs TARGET=<hostname or group>`
 
-### Wipe all Validators + Restart
+### Wipe all Validators + Restart "Down Wipe Up"
 *Resets the node state / wipes all blocks & run data*
 - all :
-  - `make rs`
+  - `make dwu`
 - some :
-  - `make rs TARGET==<hostname or group>`
+  - `make dwu TARGET==<hostname or group>`
   
 ### Export ABCI state + Push to git
 *Creates a JSON with the state of the ABCI application, adds it to `genesis_testnet.json`, stages the change and pushes it to the testnet branch*
