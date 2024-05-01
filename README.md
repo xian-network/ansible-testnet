@@ -1,6 +1,6 @@
 # Ansible Testnet
 
-This repository contains playbooks and inventory definitions for managing the Xian testnet.
+This repository contains playbooks for managing the Xian testnet.
 
 ## Setup
 
