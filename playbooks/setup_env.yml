@@ -4,10 +4,6 @@
   become: yes
   vars:
     python_version: "3.11"
-    xian_repo: "https://github.com/xian-network/xian-core.git"
-    contracting_repo: "https://github.com/xian-network/contracting.git"
-    cometbft_version: "0.38.6"
-    cometbft_url: "https://github.com/cometbft/cometbft/releases/download/v{{ cometbft_version }}/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
 
   tasks:
     - name: Update and add required PPA
@@ -27,24 +23,24 @@
           - "build-essential"
         update_cache: yes
 
-    - name: Download and setup CometBFT
-      block:
-        - name: Download CometBFT
-          get_url:
-            url: "{{ cometbft_url }}"
-            dest: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
+    # - name: Download and setup CometBFT
+    #   block:
+    #     - name: Download CometBFT
+    #       get_url:
+    #         url: "{{ cometbft_url }}"
+    #         dest: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
 
-        - name: Extract CometBFT
-          ansible.builtin.unarchive:
-            src: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
-            dest: "/root/xian-core/"
-            remote_src: yes
-            creates: "/root/xian-core/cometbft"
+    #     - name: Extract CometBFT
+    #       ansible.builtin.unarchive:
+    #         src: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
+    #         dest: "/root/xian-core/"
+    #         remote_src: yes
+    #         creates: "/root/xian-core/cometbft"
 
-        - name: Initialize CometBFT
-          ansible.builtin.command:
-            cmd: "./cometbft init"
-            chdir: "/root/xian-core/"
+    #     - name: Initialize CometBFT
+    #       ansible.builtin.command:
+    #         cmd: "./cometbft init"
+    #         chdir: "/root/xian-core/"
 
     - name: Install Node.js
       apt:
