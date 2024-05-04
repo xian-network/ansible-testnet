@@ -13,7 +13,7 @@
     moniker: "{{inventory_hostname}}"
     genesis_file_name: "genesis-testnet.json"
     # Add the seed node IP if joining an existing network
-    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '18de8a0bd605310cda04b21951d8f3b3188397eb@116.203.81.165'}}"
+    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else 'ceb9f24468df31b87fb4927b9b77f48cacc27d37@116.203.81.165'}}"
     # Decide if you're starting a new network or joining an existing one
     starting_new_network: "{{ true if inventory_hostname == 'testnet_1' else false }}"  # Set to false if joining an existing network
 

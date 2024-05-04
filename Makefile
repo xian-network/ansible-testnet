@@ -36,3 +36,6 @@ make logs:
 	
 make gen2tn:
 	ansible-playbook ./playbooks/gen2tn.yml -i inventory.ini -l $(EXPORT_STATE_HOST)
+
+make setup_prometheus:
+	ansible-playbook ./playbooks/setup_prometheus.yml -i inventory.ini

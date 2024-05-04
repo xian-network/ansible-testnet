@@ -1,0 +1,57 @@
+---
+- name: Setup Prometheus
+  hosts: testnet_1
+  become: yes
+  tasks:
+    - name: Download Prometheus binary
+      get_url:
+        url: https://github.com/prometheus/prometheus/releases/download/v2.51.2/prometheus-2.51.2.linux-amd64.tar.gz
+        dest: /tmp/prometheus-2.51.2.linux-amd64.tar.gz
+
+    - name: Extract Prometheus tar.gz
+      unarchive:
+        src: /tmp/prometheus-2.51.2.linux-amd64.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Create Prometheus configuration file
+      copy:
+        dest: /opt/prometheus-2.51.2.linux-amd64/prometheus.yml
+        content: |
+          global:
+            scrape_interval: 15s
+
+          scrape_configs:
+          - job_name: node
+            static_configs:
+            - targets: ['localhost:9100', '78.46.117.248:9100','128.140.96.150:9100','23.88.59.62:9100','49.13.233.15:9100','94.130.227.67:9100','195.201.216.75:9100']
+
+    - name: Create Prometheus systemd service file
+      copy:
+        dest: /etc/systemd/system/prometheus.service
+        content: |
+          [Unit]
+          Description=Prometheus Server
+          After=network.target
+
+          [Service]
+          User=root
+          ExecStart=/opt/prometheus-2.51.2.linux-amd64/prometheus \
+            --config.file=/opt/prometheus-2.51.2.linux-amd64/prometheus.yml \
+            --storage.tsdb.path=/opt/prometheus-2.51.2.linux-amd64/data \
+            --web.console.templates=/opt/prometheus-2.51.2.linux-amd64/consoles \
+            --web.console.libraries=/opt/prometheus-2.51.2.linux-amd64/console_libraries
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd to recognize new service
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable Prometheus service
+      systemd:
+        name: prometheus
+        enabled: yes
+        state: started
