@@ -39,3 +39,6 @@ make gen2tn:
 
 make setup_prometheus:
 	ansible-playbook ./playbooks/setup_prometheus.yml -i inventory.ini
+
+make down:
+	ansible-playbook ./playbooks/nodes_down.yml -i inventory.ini -l $(TARGET)

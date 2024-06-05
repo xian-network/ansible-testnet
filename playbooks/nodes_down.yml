@@ -1,0 +1,15 @@
+---
+- name: Setup project with venv and Makefile
+  hosts: validators:service_nodes
+  become: yes
+
+  tasks:
+
+    - name: Nodes down
+      ansible.builtin.shell: |
+        source /root/xian-core/xian_venv/bin/activate && make down
+      args:
+        chdir: "/root/xian-core"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes

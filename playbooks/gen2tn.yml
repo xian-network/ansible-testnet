@@ -1,3 +1,4 @@
+# OLD - NEEDS TO BE BROUGHT UP TO DATE WITH DOCKERISED NODE
 ---
 - name: Update genesis file and push changes
   hosts: service_nodes:validators

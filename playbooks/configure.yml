@@ -3,17 +3,11 @@
   hosts: validators:service_nodes
   become: yes
   vars:
-    python_version: "3.11"
-    xian_repo: "https://github.com/xian-network/xian-core.git"
-    contracting_repo: "https://github.com/xian-network/contracting.git"
-    cometbft_version: "0.38.6"
-    cometbft_url: "https://github.com/cometbft/cometbft/releases/download/v{{ cometbft_version }}/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
-
     validator_privkey: "{{sk}}"
     moniker: "{{inventory_hostname}}"
     genesis_file_name: "genesis-testnet.json"
     # Add the seed node IP if joining an existing network
-    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '392a05fe83a27cd75f7431f070cfb57446d1e93b@116.203.81.165'}}"
+    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '5c427355a00fd24889ae49412a82bdea4527eab8@116.203.81.165'}}"
     CONTRACTING_BRANCH: "testnet"
     CORE_BRANCH: "testnet"
     XIAN_STACK_BRANCH: "overhaul"
@@ -48,6 +42,11 @@
         chdir: /root/xian-stack
         cmd: make core-dev-build
 
+    - name: Stop the core development environment, if running
+      ansible.builtin.shell:
+        chdir: /root/xian-stack
+        cmd: make core-dev-down
+
     - name: Start core development environment
       ansible.builtin.shell:
         chdir: /root/xian-stack
@@ -62,4 +61,4 @@
       ansible.builtin.shell:
         chdir: /root/xian-stack
         cmd: >
-          make configure CONFIGURE_ARGS='--moniker "{{moniker}}" --genesis-file-name "{{genesis_file_name}}" --validator-privkey "{{validator_privkey}}" --seed-node-address "{{seed_node_address}}" --copy-genesis True'
+          make configure CONFIGURE_ARGS='--moniker "{{moniker}}" --genesis-file-name "{{genesis_file_name}}" --validator-privkey "{{validator_privkey}}" {% if seed_node_address is defined and seed_node_address %}--seed-node-address "{{seed_node_address}}" {% endif %} --copy-genesis True'
