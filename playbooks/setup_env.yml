@@ -2,27 +2,32 @@
 - name: Install and setup environment dependencies for Xian on Ubuntu 22.04
   hosts: validators:service_nodes
   become: yes
-  vars:
-    python_version: "3.11"
 
   tasks:
-    - name: Update and add required PPA
-      apt:
-        name: software-properties-common
-        state: present
-      notify: Add deadsnakes PPA
 
-    - name: Install necessary packages
-      apt:
-        name:
-          - "pkg-config"
-          - "python{{ python_version }}"
-          - "python{{ python_version }}-dev"
-          - "python{{ python_version }}-venv"
-          - "libhdf5-dev"
-          - "build-essential"
-        update_cache: yes
+    - name: Download Docker installation script
+      get_url:
+        url: "https://get.docker.com"
+        dest: "/tmp/get-docker.sh"
+        mode: '0755'
 
+    - name: Execute Docker installation script
+      shell: sh /tmp/get-docker.sh
+      become: yes
+
+    - name: Download Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: "/usr/local/bin/docker-compose"
+        mode: '0755'
+      become: yes
+
+    - name: Set executable permission on Docker Compose
+      file:
+        path: "/usr/local/bin/docker-compose"
+        mode: 'a+x'
+      become: yes
+ 
     - name: Download Node Exporter
       get_url:
         url: "https://github.com/prometheus/node_exporter/releases/download/v1.8.0/node_exporter-1.8.0.linux-amd64.tar.gz"
@@ -58,21 +63,6 @@
         name: node_exporter
         enabled: yes
         state: started
-
-    - name: Install Node.js
-      apt:
-        name: nodejs
-        state: present
-        update_cache: yes
-
-    - name: Install npm
-      apt:
-        name: npm
-        state: present
-
-    - name: Install PM2 globally using npm
-      ansible.builtin.command:
-        cmd: npm install pm2@latest -g
 
     - name: Install UFW
       apt:
@@ -110,12 +100,6 @@
         direction: incoming
 
   handlers:
-    - name: Add deadsnakes PPA
-      apt_repository:
-        repo: "ppa:deadsnakes/ppa"
-        state: present
-        update_cache: yes
-
     - name: Reload systemd
       systemd:
         daemon_reload: yes

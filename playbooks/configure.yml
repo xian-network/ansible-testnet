@@ -13,71 +13,50 @@
     moniker: "{{inventory_hostname}}"
     genesis_file_name: "genesis-testnet.json"
     # Add the seed node IP if joining an existing network
-    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else 'ceb9f24468df31b87fb4927b9b77f48cacc27d37@116.203.81.165'}}"
-    # Decide if you're starting a new network or joining an existing one
-    starting_new_network: "{{ true if inventory_hostname == 'testnet_1' else false }}"  # Set to false if joining an existing network
+    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '392a05fe83a27cd75f7431f070cfb57446d1e93b@116.203.81.165'}}"
 
   tasks:
-    - name: Clone Xian and contracting repositories
+
+    - name: Clone Xian Stack Development Environment repository
       git:
-        repo: "{{ item.repo }}"
-        dest: "{{ item.dest }}"
-        version: "{{ item.version | default('HEAD') }}"
+        repo: 'https://github.com/xian-network/xian-stack-dev-env.git'
+        dest: '/root/xian-stack'
         clone: yes
         update: yes
-        force: yes
-      loop:
-        - { repo: "{{ xian_repo }}", dest: "/root/xian-core", version: "testnet" }
-        - { repo: "{{ contracting_repo }}", dest: "/root/xian-core/contracting", version: "testnet" }
 
-    - name: Download and setup CometBFT
-      block:
-        - name: Download CometBFT
-          get_url:
-            url: "{{ cometbft_url }}"
-            dest: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
+    - name: Clone Xian Core repository
+      git:
+        repo: 'https://github.com/xian-network/xian-core.git'
+        dest: '/root/xian-stack/xian-core'
+        version: "{{ CORE_BRANCH }}"
+        clone: yes
+        update: yes
 
-        - name: Extract CometBFT
-          ansible.builtin.unarchive:
-            src: "/tmp/cometbft_{{ cometbft_version }}_linux_amd64.tar.gz"
-            dest: "/root/xian-core/"
-            remote_src: yes
-            creates: "/root/xian-core/cometbft"
+    - name: Clone Xian Contracting repository
+      git:
+        repo: 'https://github.com/xian-network/xian-contracting.git'
+        dest: '/root/xian-stack/xian-contracting'
+        version: "{{ CONTRACTING_BRANCH }}"
+        clone: yes
+        update: yes
 
-        - name: Initialize CometBFT
-          ansible.builtin.command:
-            cmd: "./cometbft init"
-            chdir: "/root/xian-core/"
+    - name: Build core development environment
+      ansible.builtin.shell:
+        chdir: /root/xian_stack
+        cmd: make core-dev-build
 
+    - name: Start core development environment
+      ansible.builtin.shell:
+        chdir: /root/xian_stack
+        cmd: make core-dev-up
 
-    - name: Set up Python virtual environment and dependencies
-      block:
-        - name: Create Python virtual environment
-          ansible.builtin.command:
-            cmd: "python{{ python_version }} -m venv /root/xian-core/xian_venv"
-          args:
-            creates: "/root/xian-core/xian_venv"
+    - name: Initialize the environment
+      ansible.builtin.shell:
+        chdir: /root/xian_stack
+        cmd: make init
 
-    - name: Install Python packages for 'contracting'
-      ansible.builtin.command:
-        cmd: "/root/xian-core/xian_venv/bin/pip install -e ."
-      args:
-        chdir: "/root/xian-core/contracting"
-
-    - name: Install Python packages for 'xian-core'
-      ansible.builtin.command:
-        cmd: "/root/xian-core/xian_venv/bin/pip install -e ."
-      args:
-        chdir: "/root/xian-core/"
-
-    - name: Configure your node
-      ansible.builtin.command:
-        chdir: /root/xian-core/
+    - name: Configure the environment
+      ansible.builtin.shell:
+        chdir: /root/xian_stack
         cmd: >
-          {{ 'xian_venv/bin/python src/xian/tools/configure.py' }}
-          --moniker "{{ moniker }}"
-          --copy-genesis {{ starting_new_network | ternary('True', 'False') }}
-          --genesis-file-name {{ genesis_file_name }}
-          --validator-privkey "{{sk}}"
-          --seed-node-address "{{seed_node_address}}"
-      when: starting_new_network or seed_node_address
+          make configure CONFIGURE_ARGS='--moniker "{{moniker}}" --genesis-file-name "{{genesis_file_name}}" --validator-privkey "{{validator_privkey}}" --seed-node-address "{{seed_node_address}}" --copy-genesis True'

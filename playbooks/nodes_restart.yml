@@ -7,17 +7,18 @@
 
     - name: Nodes down
       ansible.builtin.shell: |
-        source /root/xian-core/xian_venv/bin/activate && make down
+        make down
       args:
-        chdir: "/root/xian-core"
+        chdir: "/root/xian-stack"
         executable: /bin/bash
       ignore_errors: yes
       become: yes
 
     - name: Nodes up
       ansible.builtin.shell: |
-        source /root/xian-core/xian_venv/bin/activate && make up
+        make up
       args:
-        chdir: "/root/xian-core"
+        chdir: "/root/xian-stack"
         executable: /bin/bash
       become: yes
+
