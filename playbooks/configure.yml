@@ -14,12 +14,15 @@
     genesis_file_name: "genesis-testnet.json"
     # Add the seed node IP if joining an existing network
     seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '392a05fe83a27cd75f7431f070cfb57446d1e93b@116.203.81.165'}}"
-
+    CONTRACTING_BRANCH: "testnet"
+    CORE_BRANCH: "testnet"
+    XIAN_STACK_BRANCH: "overhaul"
   tasks:
 
     - name: Clone Xian Stack Development Environment repository
       git:
         repo: 'https://github.com/xian-network/xian-stack-dev-env.git'
+        version: "{{ XIAN_STACK_BRANCH }}"
         dest: '/root/xian-stack'
         clone: yes
         update: yes
@@ -42,21 +45,21 @@
 
     - name: Build core development environment
       ansible.builtin.shell:
-        chdir: /root/xian_stack
+        chdir: /root/xian-stack
         cmd: make core-dev-build
 
     - name: Start core development environment
       ansible.builtin.shell:
-        chdir: /root/xian_stack
+        chdir: /root/xian-stack
         cmd: make core-dev-up
 
     - name: Initialize the environment
       ansible.builtin.shell:
-        chdir: /root/xian_stack
+        chdir: /root/xian-stack
         cmd: make init
 
     - name: Configure the environment
       ansible.builtin.shell:
-        chdir: /root/xian_stack
+        chdir: /root/xian-stack
         cmd: >
           make configure CONFIGURE_ARGS='--moniker "{{moniker}}" --genesis-file-name "{{genesis_file_name}}" --validator-privkey "{{validator_privkey}}" --seed-node-address "{{seed_node_address}}" --copy-genesis True'
