@@ -42,3 +42,6 @@ make setup_prometheus:
 
 make down:
 	ansible-playbook ./playbooks/nodes_down.yml -i inventory.ini -l $(TARGET)
+
+make up:
+	ansible-playbook ./playbooks/nodes_up.yml -i inventory.ini -l $(TARGET)

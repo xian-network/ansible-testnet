@@ -7,7 +7,7 @@
 
     - name: Nodes down
       ansible.builtin.shell: |
-        make down
+        make up
       args:
         chdir: "/root/xian-stack"
         executable: /bin/bash
