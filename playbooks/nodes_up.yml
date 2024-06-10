@@ -5,7 +5,7 @@
 
   tasks:
 
-    - name: Nodes down
+    - name: Nodes up
       ansible.builtin.shell: |
         make up
       args:
