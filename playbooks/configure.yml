@@ -5,14 +5,9 @@
   vars:
     validator_privkey: "{{sk}}"
     moniker: "{{inventory_hostname}}"
-    genesis_file_name: "genesis-testnet.json"
     # Add the seed node IP if joining an existing network
-    seed_node_address: "{{None if inventory_hostname == 'testnet_1' else '5c427355a00fd24889ae49412a82bdea4527eab8@116.203.81.165'}}"
-    CONTRACTING_BRANCH: "testnet"
-    CORE_BRANCH: "testnet"
-    XIAN_STACK_BRANCH: "overhaul"
+    seed_node_address: "{{ seed_address if is_seed else None }}"
   tasks:
-
     - name: Clone Xian Stack Development Environment repository
       git:
         repo: 'https://github.com/xian-network/xian-stack-dev-env.git'
@@ -61,4 +56,4 @@
       ansible.builtin.shell:
         chdir: /root/xian-stack
         cmd: >
-          make configure CONFIGURE_ARGS='--moniker "{{moniker}}" --genesis-file-name "{{genesis_file_name}}" --validator-privkey "{{validator_privkey}}" {% if seed_node_address is defined and seed_node_address %}--seed-node-address "{{seed_node_address}}" {% endif %} --copy-genesis True'
+          make configure CONFIGURE_ARGS='--moniker "{{moniker}}" --genesis-file-name "{{genesis_file_name}}" --validator-privkey "{{validator_privkey}}" {% if seed_node_address is defined and seed_node_address %}--seed-node-address "{{seed_node_address}}" {% endif %} --copy-genesis --service-node'

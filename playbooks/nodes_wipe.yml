@@ -1,0 +1,15 @@
+---
+- name: Setup project with venv and Makefile
+  hosts: validators:service_nodes
+  become: yes
+
+  tasks:
+
+    - name: Nodes wipe
+      ansible.builtin.shell: |
+        make wipe
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes
