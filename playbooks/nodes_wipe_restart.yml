@@ -23,6 +23,32 @@
       ignore_errors: yes
       become: yes
 
+    - name: Docker down
+      ansible.builtin.shell: |
+        make core-dev-down
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes
+
+    - name: Wipe BDS
+      ansible.builtin.shell: |
+        make wipe-bds
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes
+
+    - name: Docker Up
+      ansible.builtin.shell: |
+        make core-dev-up
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      become: yes
+
     - name: Nodes up
       ansible.builtin.shell: |
         make up

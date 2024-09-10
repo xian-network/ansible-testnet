@@ -5,6 +5,15 @@
 
   tasks:
 
+    - name : Docker up
+      ansible.builtin.shell: |
+        make core-dev-up
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes
+
     - name: Nodes up
       ansible.builtin.shell: |
         make up

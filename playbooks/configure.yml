@@ -15,6 +15,7 @@
         dest: '/root/xian-stack'
         clone: yes
         update: yes
+        force: yes
 
     - name: Clone Xian Core repository
       git:
@@ -23,6 +24,7 @@
         version: "{{ CORE_BRANCH }}"
         clone: yes
         update: yes
+        force: yes
 
     - name: Clone Xian Contracting repository
       git:
@@ -31,6 +33,7 @@
         version: "{{ CONTRACTING_BRANCH }}"
         clone: yes
         update: yes
+        force: yes
 
     - name: Build core development environment
       ansible.builtin.shell:
@@ -47,7 +50,7 @@
         chdir: /root/xian-stack
         cmd: make core-dev-up
 
-    - name: Initialize the environment
+    - name: Initialize cometbft
       ansible.builtin.shell:
         chdir: /root/xian-stack
         cmd: make init

@@ -13,3 +13,12 @@
         executable: /bin/bash
       ignore_errors: yes
       become: yes
+
+    - name: Docker down
+      ansible.builtin.shell: |
+        make core-dev-down
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes

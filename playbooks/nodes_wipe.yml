@@ -13,3 +13,12 @@
         executable: /bin/bash
       ignore_errors: yes
       become: yes
+
+    - name: Nodes wipe-bds
+      ansible.builtin.shell: |
+        make wipe-bds
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes

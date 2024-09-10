@@ -1,7 +1,7 @@
 TARGET ?= all
 LOGS_LINES ?= 100
 EXPORT_STATE_HOST ?= dev_node
-NETWORK ?= stagenet
+NETWORK ?= devnet
 
 # To perform an action on a specific node, use the TARGET variable from the cli
 # eg: `make setup TARGET=validators` or `make rs TARGET=service_nodes`
@@ -49,3 +49,8 @@ make up:
 
 make wipe:
 	ansible-playbook ./playbooks/nodes_wipe.yml -i inventory_$(NETWORK).ini -l $(TARGET)
+
+# update-wipe-restart
+make uws:
+	make configure
+	make dwu

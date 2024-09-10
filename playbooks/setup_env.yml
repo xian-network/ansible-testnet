@@ -58,6 +58,16 @@
           WantedBy=multi-user.target
       notify: Reload systemd
 
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
+    - name: Install build-essential package
+      apt:
+        name: build-essential
+        state: present
+    
+
     - name: Enable and start Node Exporter service
       systemd:
         name: node_exporter
