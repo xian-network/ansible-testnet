@@ -49,10 +49,22 @@
         executable: /bin/bash
       become: yes
 
-    - name: Nodes up
+    - name: Nodes up with BDS
+      ansible.builtin.shell: |
+        make up-bds
+      args:
+        chdir: "/root/xian-stack"
+        executable: /bin/bash
+      ignore_errors: yes
+      become: yes
+      when: is_service_node | bool
+
+    - name: Nodes up without BDS
       ansible.builtin.shell: |
         make up
       args:
         chdir: "/root/xian-stack"
         executable: /bin/bash
+      ignore_errors: yes
       become: yes
+      when: not is_service_node | bool

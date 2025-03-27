@@ -16,41 +16,44 @@ setup:
 	ansible-playbook ./playbooks/setup_env.yml -i inventory_$(NETWORK).ini -l $(TARGET)
 
 # start / restart all node + service node processes
-make rs:
+rs:
 	ansible-playbook ./playbooks/nodes_restart.yml -i inventory_$(NETWORK).ini -l $(TARGET)
 
 # start / restart all validators
-make rs-v:
+rs-v:
 	make rs TARGET=validators
 
 # start / restart all service nodes
-make rs-sn:
+rs-sn:
 	make rs TARGET=service_nodes
 
 # WARNING : this will wipe all blockchain state
 # down wipe up all node + service node processes -
-make dwu:
+dwu:
 	ansible-playbook ./playbooks/nodes_wipe_restart.yml -i inventory_$(NETWORK).ini -l $(TARGET)
 
-make logs:
+logs:
 	ansible-playbook ./playbooks/logs.yml -i inventory_$(NETWORK).ini -l $(TARGET) -e "lines=$(LOGS_LINES)"
 	
-make gen2tn:
+gen2tn:
 	ansible-playbook ./playbooks/gen2tn.yml -i inventory_$(NETWORK).ini -l $(EXPORT_STATE_HOST)
 
-make setup_prometheus:
+setup_prometheus:
 	ansible-playbook ./playbooks/setup_prometheus.yml -i inventory_$(NETWORK).ini
 
-make down:
+down:
 	ansible-playbook ./playbooks/nodes_down.yml -i inventory_$(NETWORK).ini -l $(TARGET)
 
-make up:
+up:
 	ansible-playbook ./playbooks/nodes_up.yml -i inventory_$(NETWORK).ini -l $(TARGET)
 
-make wipe:
+wipe:
 	ansible-playbook ./playbooks/nodes_wipe.yml -i inventory_$(NETWORK).ini -l $(TARGET)
 
+configure-firewall:
+	ansible-playbook ./playbooks/configure_firewall.yml -i inventory_$(NETWORK).ini
+
 # update-wipe-restart
-make uws:
+uws:
 	make configure
 	make dwu

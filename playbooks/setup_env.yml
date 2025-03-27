@@ -4,7 +4,13 @@
   become: yes
 
   tasks:
-
+    - name: Install Git
+      apt:
+        name: 
+          - git
+          - make
+        state: present
+        update_cache: yes
     - name: Download Docker installation script
       get_url:
         url: "https://get.docker.com"
@@ -15,19 +21,20 @@
       shell: sh /tmp/get-docker.sh
       become: yes
 
-    - name: Download Docker Compose
-      get_url:
-        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
-        dest: "/usr/local/bin/docker-compose"
-        mode: '0755'
+    - name: Install Docker Compose plugin
+      apt:
+        name: docker-compose-plugin
+        state: present
+        update_cache: yes
       become: yes
 
-    - name: Set executable permission on Docker Compose
+    - name: Create docker-compose symlink
       file:
-        path: "/usr/local/bin/docker-compose"
-        mode: 'a+x'
+        src: /usr/libexec/docker/cli-plugins/docker-compose
+        dest: /usr/local/bin/docker-compose
+        state: link
       become: yes
- 
+
     - name: Download Node Exporter
       get_url:
         url: "https://github.com/prometheus/node_exporter/releases/download/v1.8.0/node_exporter-1.8.0.linux-amd64.tar.gz"

@@ -6,8 +6,12 @@
     validator_privkey: "{{sk}}"
     moniker: "{{inventory_hostname}}"
     # Add the seed node IP if joining an existing network
-    seed_node_address: "{{ seed_address if is_seed else None }}"
+    seed_node_address: "{{ seed_address if not is_seed else None }}"
   tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
     - name: Clone Xian Stack Development Environment repository
       git:
         repo: 'https://github.com/xian-network/xian-stack-dev-env.git'
@@ -35,6 +39,19 @@
         update: yes
         force: yes
 
+    - name: Install required packages
+      apt:
+        name: 
+          - wget
+          - make
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Set architecture specific variables
+      set_fact:
+        cometbft_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"
+
     - name: Build core development environment
       ansible.builtin.shell:
         chdir: /root/xian-stack
@@ -60,3 +77,8 @@
         chdir: /root/xian-stack
         cmd: >
           make configure CONFIGURE_ARGS='--moniker "{{moniker}}" --genesis-file-name "{{genesis_file_name}}" --validator-privkey "{{validator_privkey}}" {% if seed_node_address is defined and seed_node_address %}--seed-node-address "{{seed_node_address}}" {% endif %} --copy-genesis --service-node'
+
+  handlers:
+    - name: Print build output
+      debug:
+        msg: "{{ build_output.stdout_lines }}"
